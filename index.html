@@ -191,7 +191,7 @@ const DATA=[
 {cat:"Pizza",items:[
 ["Blok kaas","stuk"],["Salami","kg"],["Ham","kg"],["Champignons","kratten"],
 ["Mozzarella","stuk"],["Gorgonzola","stuk"],["Gesneden kaas","pakken"],["Ananas","dozen"],
-["Tonijn","dozen"],["Artisjok","blikken"],["Zalm","blikken"],["Ansjovis","blikken"], 
+["Tonijn","dozen"],["Artisjok","blikken"],["Zalm","blikken"],["Ansjovis","blikken"],
 ["Olijven","blikken"],["Jalapenos","blikken"],["Fetakaas","stuk"]]},
 {cat:"Verpakkingsmateriaal",items:[
 ["Pizza dozen","stuk"],["Calzone dozen","stuk"],["911 + deksel","aantal"],
@@ -211,7 +211,7 @@ const DATA=[
 ]},
 {cat:"Overig",items:[
 ["Baal Uien","stuk"],["Citroen","kg"],["Lollys","stuk"],
-["Frituur olie","emmer"],["Witte Wijn","dozen"],["Rode Wijn","dozen"]]}
+["Frituur olie","emmers"],["Witte Wijn","dozen"],["Rode Wijn","dozen"]]}
 ];
 
 const STORE="alanya_order_android_ok_v1";
@@ -244,7 +244,6 @@ function getOrderedItems(){
       const qty=(r?.qty ?? "").toString().trim();
       if(!qty || qty==="0") continue;
       items.push({
-        cat:g.cat,
         product:p,
         qty,
         unit:(r?.unit || defU)
@@ -260,14 +259,13 @@ function buildPrettyHtml(){
 
   const rows = items.map(it => `
     <tr>
-      <td>${escapeHtml(it.cat)}</td>
       <td>${escapeHtml(it.product)}</td>
       <td style="text-align:right; font-weight:600;">${escapeHtml(it.qty)}</td>
       <td>${escapeHtml(it.unit)}</td>
     </tr>
   `).join("");
 
-  const empty = `<tr><td colspan="4" style="padding:14px; color:#666;">Geen items ingevuld.</td></tr>`;
+  const empty = `<tr><td colspan="3" style="padding:14px; color:#666;">Geen items ingevuld.</td></tr>`;
 
   return `<!doctype html>
 <html>
@@ -322,7 +320,6 @@ async function mailOrder(){
   const html = buildPrettyHtml();
   const file = new File([html], `bestelling-alanya-${date}.html`, { type:"text/html" });
 
-  // 1) Try share with file (Android Chrome often supports this)
   try{
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
@@ -332,11 +329,8 @@ async function mailOrder(){
       });
       return;
     }
-  } catch (e) {
-    // fall through to fallback
-  }
+  } catch (e) {}
 
-  // 2) Fallback: open the HTML in a new tab/window (always works)
   try{
     const blob = new Blob([html], {type:"text/html"});
     const url = URL.createObjectURL(blob);
@@ -448,4 +442,5 @@ $("mail").addEventListener("click", mailOrder);
 
 </body>
 </html>
+
 
