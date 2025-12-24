@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bestellijst – Alanya Delfzijl</title>
+
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bestellijst">
+
+<link rel="apple-touch-icon" sizes="180x180" href="alanya-icon-badge-180.png">
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root{
+  --text:#e8ecf7;
+  --muted:#aab4d6;
+  --line:rgba(255,255,255,.12);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;
+  background:linear-gradient(180deg,#071022,#0b1220);
+  color:var(--text);
+  font-size:13px;
+}
+.topbar{
+  padding:12px 14px 10px;
+  border-bottom:1px solid var(--line);
+  background:rgba(11,18,32,.9);
+}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px}
+input[type="date"]{
+  width:210px;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-size:13px;
+}
+.wrap{max-width:900px;margin:auto;padding:12px 14px 36px}
+
+details{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:rgba(15,23,48,.86);
+  overflow:hidden;
+}
+summary{
+  padding:10px 12px;
+  cursor:pointer;
+  font-weight:650;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+summary::-webkit-details-marker{display:none}
+.badge{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.2);
+}
+
+.row{
+  display:grid;
+  grid-template-columns: 1fr 56px 96px;
+  gap:6px;
+  align-items:center;
+  padding:6px 10px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.row.header{
+  font-size:11px;
+  color:var(--muted);
+  background:rgba(11,18,32,.7);
+}
+.prod{
+  font-weight:600;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.qtyInput{
+  width:56px;
+  padding:5px 6px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-size:12px;
+  text-align:center;
+}
+.unitSelect{
+  width:96px;
+  padding:5px 6px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font-size:12px;
+}
+
+.bottomActions{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.1);
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+button{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  color:var(--text);
+  font-size:14px;
+  cursor:pointer;
+}
+button.primary{
+  background:rgba(94,234,212,.14);
+  border-color: rgba(94,234,212,.35);
+}
+button.danger{
+  background:rgba(251,113,133,.12);
+  border-color: rgba(251,113,133,.35);
+}
+.hint{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.35
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <label>Besteldatum</label>
+  <input type="date" id="orderDate">
+</div>
+
+<main class="wrap" id="app"></main>
+
+<div class="wrap">
+  <div class="bottomActions">
+    <button class="primary" id="mail">📧 Mail bestelling</button>
+    <button class="danger" id="clear">Alles wissen</button>
+  </div>
+  <div class="hint">
+    Tik op <b>Mail bestelling</b>. Als delen met bijlage niet ondersteund wordt, opent automatisch een pagina met de tabel (van daaruit kun je delen of printen).
+  </div>
+</div>
+
+<script>
+/* ==== CONFIG ==== */
+const SUPPLIER_EMAIL="info@kingfood.nl";
+const SUBJECT_PREFIX="bestelling - Alanya Delfzijl - ";
+const SIGN_NAME="Abdullah";
+const SIGN_PHONE="06-45922307";
+
+const UNITS=["kg","stuk","dozen","zakken","emmers","blikken","tray","kratten","aantal"];
+
+/* ==== PRODUCTS ==== */
+const DATA=[
+{cat:"Vriezer",items:[
+["Aardappelschijfjes","dozen"],["Patat","dozen"],["Lahmacun","dozen"],
+["Turkse Worst","dozen"],["Mixed fish","zakken"],["Gamba's","zakken"],["Garnalen","zakken"],
+["Parmezaanse kaas","zakken"],["Spek","stuk"],["Mixed groente","zakken"],
+["Falafel","zakken"]]},
+{cat:"Kruiden",items:[
+["Knoflookpoeder","dozen"],["Paprika poeder","zakken"],["Zwarte peper","zakken"],
+["Komijn","zakken"],["Runder bouillon","stuk"],["Peterselie","zakken"],
+["Oregano","zakken"]]},
+{cat:"Deegwaren",items:[
+["Pita brood","dozen"],["Turks brood","dozen"],["Durum","dozen"],["Meel","zakken"]]},
+{cat:"Pasta",items:[
+["Penne","dozen"],["Spaghetti","dozen"],["Tagliatelle","dozen"],
+["Tortellini","dozen"],["Lasagne bladeren","dozen"]]},
+{cat:"Sauzen",items:[
+["Fritessaus","emmers"],["Ketchup","emmers"],["Sambal","emmers"],
+["Ketjap Manis","stuk"],["Pizza saus","dozen"]]},
+{cat:"Pizza",items:[
+["Blok kaas","stuk"],["Salami","kg"],["Ham","kg"],["Champignons","kratten"],
+["Mozzarella","stuk"],["Gorgonzola","stuk"],["Ananas","dozen"],
+["Tonijn","dozen"],["Artisjok","blikken"],["Zalm","blikken"],
+["Olijven","blikken"],["Jalapenos","blikken"],["Fetakaas","stuk"]]},
+{cat:"Verpakkingsmateriaal",items:[
+["Pizza dozen","stuk"],["Calzone dozen","stuk"],["911 + deksel","aantal"],
+["1 vaks lasagne + deksel","aantal"],["Catering bord rond 13 cm","aantal"],
+["Catering bord rond 17 cm","aantal"],["Catering bord rond 20 cm","aantal"],
+["Catering bord rond 23 cm","aantal"],["Salade bakjes 275 cc","aantal"],
+["Saus bakjes 80 cc","dozen"],["Servetten","dozen"],["Pizza tafels","dozen"]]},
+{cat:"Drinken",items:[
+["Ayran","tray"],["Coca Cola","tray"],["Coca Cola Zero","tray"],
+["Fanta","tray"],["Sprite Zero","tray"],["Red Bull","tray"],
+["Fernandes Geel","tray"],["Fernandes Rood","tray"],["Fernandes Groen","tray"],
+["Fernandes Blauw","tray"],["Spa Blauw","tray"],["AA","dozen"],
+["Mazaa Mango","tray"],["Fristi","tray"],["Chocomel","tray"]]},
+{cat:"Vlees",items:[
+["Spare ribs","kg"],["Verse kipfilet","kg"],["Koppenhaas","kg"]
+]},
+{cat:"Overig",items:[
+["Baal Uien","stuk"],["Citroen","kg"],["Lollys","stuk"],
+["Witte Wijn","dozen"],["Rode Wijn","dozen"]]}
+];
+
+const STORE="alanya_order_android_ok_v1";
+const $=id=>document.getElementById(id);
+const state=JSON.parse(localStorage.getItem(STORE)||"{}");
+state.rows=state.rows||{};
+state.date=state.date||new Date().toISOString().slice(0,10);
+$("orderDate").value=state.date;
+
+function key(c,p){ return c+"__"+p; }
+function save(){
+  state.date = $("orderDate").value || new Date().toISOString().slice(0,10);
+  localStorage.setItem(STORE, JSON.stringify(state));
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
+function getOrderedItems(){
+  const items=[];
+  for(const g of DATA){
+    for(const [p,defU] of g.items){
+      const r=state.rows[key(g.cat,p)];
+      const qty=(r?.qty ?? "").toString().trim();
+      if(!qty || qty==="0") continue;
+      items.push({
+        cat:g.cat,
+        product:p,
+        qty,
+        unit:(r?.unit || defU)
+      });
+    }
+  }
+  return items;
+}
+
+function buildPrettyHtml(){
+  const items=getOrderedItems();
+  const date=state.date;
+
+  const rows = items.map(it => `
+    <tr>
+      <td>${escapeHtml(it.cat)}</td>
+      <td>${escapeHtml(it.product)}</td>
+      <td style="text-align:right; font-weight:600;">${escapeHtml(it.qty)}</td>
+      <td>${escapeHtml(it.unit)}</td>
+    </tr>
+  `).join("");
+
+  const empty = `<tr><td colspan="4" style="padding:14px; color:#666;">Geen items ingevuld.</td></tr>`;
+
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bestelling - Alanya Delfzijl</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif; margin:24px; color:#111;}
+  h2{margin:0 0 6px 0;}
+  .meta{color:#444; margin-bottom:14px;}
+  table{width:100%; border-collapse:collapse; font-size:14px;}
+  th,td{border:1px solid #ddd; padding:8px 10px;}
+  th{background:#f3f4f6; text-align:left;}
+  .sig{margin-top:18px; white-space:pre-line;}
+  .to{margin:10px 0 16px 0; color:#333;}
+  .how{margin:12px 0 0 0; padding:10px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; color:#111;}
+</style>
+</head>
+<body>
+  <h2>Bestelling – Alanya Delfzijl</h2>
+  <div class="meta"><b>Besteldatum:</b> ${escapeHtml(date)}</div>
+  <div class="to"><b>Aan:</b> ${escapeHtml(SUPPLIER_EMAIL)}<br><b>Onderwerp:</b> ${escapeHtml(SUBJECT_PREFIX + date)}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Categorie</th>
+        <th>Product</th>
+        <th style="text-align:right;">Aantal</th>
+        <th>Eenheid</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${items.length ? rows : empty}
+    </tbody>
+  </table>
+
+  <div class="sig">Groet,\n${escapeHtml(SIGN_NAME)}\n${escapeHtml(SIGN_PHONE)}</div>
+
+  <div class="how">
+    <b>Tip:</b> Gebruik de <b>Deel</b>-knop van je browser om te mailen of kies <b>Print</b> om als PDF te versturen.
+  </div>
+</body>
+</html>`;
+}
+
+async function mailOrder(){
+  save();
+  const date = state.date;
+  const subject = SUBJECT_PREFIX + date;
+
+  const html = buildPrettyHtml();
+  const file = new File([html], `bestelling-alanya-${date}.html`, { type:"text/html" });
+
+  // 1) Try share with file (Android Chrome often supports this)
+  try{
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: subject,
+        text: "Bestelling Alanya Delfzijl (HTML bijlage).",
+        files: [file]
+      });
+      return;
+    }
+  } catch (e) {
+    // fall through to fallback
+  }
+
+  // 2) Fallback: open the HTML in a new tab/window (always works)
+  try{
+    const blob = new Blob([html], {type:"text/html"});
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if(!w){
+      alert("Popup geblokkeerd. Sta pop-ups toe of open de pagina handmatig in een nieuw tabblad.");
+    } else {
+      alert("Tabel geopend. Gebruik daar de Deel-knop van je browser om te mailen (of Print → PDF).");
+    }
+  } catch {
+    alert("Delen wordt niet ondersteund op dit apparaat.");
+  }
+}
+
+function render(){
+  const app=$("app");
+  app.innerHTML="";
+
+  for(const g of DATA){
+    const d=document.createElement("details");
+    d.open=true;
+
+    const filled=g.items.filter(([p])=>{
+      const q=state.rows[key(g.cat,p)]?.qty;
+      return q && q!=="0";
+    }).length;
+
+    const s=document.createElement("summary");
+    s.innerHTML=`${g.cat} <span class="badge">${filled}</span>`;
+    d.appendChild(s);
+
+    const header=document.createElement("div");
+    header.className="row header";
+    header.innerHTML="<div>Product</div><div>Aantal</div><div>Eenheid</div>";
+    d.appendChild(header);
+
+    for(const [p,defU] of g.items){
+      const k=key(g.cat,p);
+      const r=state.rows[k] || { qty:"", unit:defU };
+
+      const row=document.createElement("div");
+      row.className="row";
+
+      const prod=document.createElement("div");
+      prod.className="prod";
+      prod.textContent=p;
+
+      const inp=document.createElement("input");
+      inp.className="qtyInput";
+      inp.type="number";
+      inp.inputMode="numeric";
+      inp.placeholder="0";
+      inp.value=r.qty ?? "";
+
+      const sel=document.createElement("select");
+      sel.className="unitSelect";
+      const set=new Set(UNITS); set.add(defU);
+      [...set].forEach(u=>{
+        const o=document.createElement("option");
+        o.value=u; o.textContent=u;
+        if((r.unit||defU)===u) o.selected=true;
+        sel.appendChild(o);
+      });
+
+      inp.oninput=()=>{
+        state.rows[k]=state.rows[k]||{};
+        state.rows[k].qty=inp.value;
+        if(!state.rows[k].unit) state.rows[k].unit=defU;
+        save();
+
+        const newFilled=g.items.filter(([pp])=>{
+          const q=state.rows[key(g.cat,pp)]?.qty;
+          return q && q!=="0";
+        }).length;
+        s.innerHTML=`${g.cat} <span class="badge">${newFilled}</span>`;
+      };
+
+      sel.onchange=()=>{
+        state.rows[k]=state.rows[k]||{};
+        state.rows[k].unit=sel.value;
+        save();
+      };
+
+      row.appendChild(prod);
+      row.appendChild(inp);
+      row.appendChild(sel);
+      d.appendChild(row);
+    }
+
+    app.appendChild(d);
+  }
+}
+
+render();
+
+/* ==== EVENTS ==== */
+$("orderDate").addEventListener("change", save);
+
+$("clear").addEventListener("click", ()=>{
+  if(confirm("Alles wissen?")){
+    state.rows={};
+    save();
+    render();
+  }
+});
+
+$("mail").addEventListener("click", mailOrder);
+</script>
+
+</body>
+</html>
+
+
