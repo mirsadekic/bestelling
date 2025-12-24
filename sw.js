@@ -1,4 +1,4 @@
-const CACHE_NAME = "alanya-bestellijst-v24";
+const CACHE_NAME = "alanya-bestellijst-v25";
 
 const ASSETS = [
   "./",
@@ -58,6 +58,7 @@ self.addEventListener("fetch", (event) => {
     })()
   );
 });
+
 
 
 
