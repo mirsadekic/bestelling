@@ -282,7 +282,6 @@ function buildPrettyHtml(){
   th{background:#f3f4f6; text-align:left;}
   .sig{margin-top:18px; white-space:pre-line;}
   .to{margin:10px 0 16px 0; color:#333;}
-  .how{margin:12px 0 0 0; padding:10px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; color:#111;}
 </style>
 </head>
 <body>
@@ -437,8 +436,16 @@ $("clear").addEventListener("click", ()=>{
 $("mail").addEventListener("click", mailOrder);
 </script>
 
+<!-- ✅ Service Worker registratie (nodig voor Android PWA/offline) -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(reg => console.log("Service worker geregistreerd:", reg.scope))
+      .catch(err => console.error("Service worker fout:", err));
+  });
+}
+</script>
+
 </body>
 </html>
-
-
-
